@@ -32,5 +32,17 @@
         /// Email validation code
         /// </summary>
         public string Code { get; set; }
+        /// <summary>
+        /// Terms and condition link
+        /// </summary>
+        public string TermsLink { get; set; }
+        /// <summary>
+        /// Gdpr link
+        /// </summary>
+        public string GDPRLink { get; set; }
+        /// <summary>
+        /// If user did not opt in to marketing communication, this will be true
+        /// </summary>
+        public bool HasNotMarketingAgreement { get; set; }
     }
 }

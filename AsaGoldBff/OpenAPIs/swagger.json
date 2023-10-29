@@ -61,9 +61,6 @@
           },
           {
             "oauth2": [ ]
-          },
-          {
-            "oauth2": [ ]
           }
         ]
       },
@@ -123,9 +120,6 @@
           }
         },
         "security": [
-          {
-            "oauth2": [ ]
-          },
           {
             "oauth2": [ ]
           },
@@ -198,9 +192,6 @@
           },
           {
             "oauth2": [ ]
-          },
-          {
-            "oauth2": [ ]
           }
         ]
       },
@@ -250,9 +241,6 @@
           }
         },
         "security": [
-          {
-            "oauth2": [ ]
-          },
           {
             "oauth2": [ ]
           },
@@ -342,9 +330,6 @@
           },
           {
             "oauth2": [ ]
-          },
-          {
-            "oauth2": [ ]
           }
         ]
       }
@@ -404,9 +389,6 @@
           },
           {
             "oauth2": [ ]
-          },
-          {
-            "oauth2": [ ]
           }
         ]
       },
@@ -414,11 +396,12 @@
         "tags": [
           "AsaGoldRepository"
         ],
-        "operationId": "AccountEmailPut",
+        "operationId": "AccountEmailUpsert",
         "parameters": [
           {
             "name": "id",
             "in": "path",
+            "description": "The  ID.",
             "required": true,
             "style": "simple",
             "schema": {
@@ -465,9 +448,6 @@
           }
         },
         "security": [
-          {
-            "oauth2": [ ]
-          },
           {
             "oauth2": [ ]
           },
@@ -522,9 +502,6 @@
           }
         },
         "security": [
-          {
-            "oauth2": [ ]
-          },
           {
             "oauth2": [ ]
           },
@@ -589,9 +566,6 @@
           },
           {
             "oauth2": [ ]
-          },
-          {
-            "oauth2": [ ]
           }
         ]
       },
@@ -599,11 +573,12 @@
         "tags": [
           "AsaGoldRepository"
         ],
-        "operationId": "EmailValidationPut",
+        "operationId": "EmailValidationUpsert",
         "parameters": [
           {
             "name": "id",
             "in": "path",
+            "description": "The  ID.",
             "required": true,
             "style": "simple",
             "schema": {
@@ -650,9 +625,6 @@
           }
         },
         "security": [
-          {
-            "oauth2": [ ]
-          },
           {
             "oauth2": [ ]
           },
@@ -742,9 +714,6 @@
           },
           {
             "oauth2": [ ]
-          },
-          {
-            "oauth2": [ ]
           }
         ]
       }
@@ -806,9 +775,6 @@
           }
         },
         "security": [
-          {
-            "oauth2": [ ]
-          },
           {
             "oauth2": [ ]
           },
@@ -881,9 +847,6 @@
           },
           {
             "oauth2": [ ]
-          },
-          {
-            "oauth2": [ ]
           }
         ]
       }
@@ -904,6 +867,11 @@
           },
           "marketingConsent": {
             "type": "boolean"
+          },
+          "lastEmailValidationTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false

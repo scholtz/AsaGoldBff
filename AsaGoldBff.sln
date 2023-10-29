@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33712.159
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsaGoldBff", "AsaGoldBff\AsaGoldBff.csproj", "{9060C041-BA2B-455B-9BFD-DCC901C3A894}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsaGoldBff", "AsaGoldBff\AsaGoldBff.csproj", "{9060C041-BA2B-455B-9BFD-DCC901C3A894}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsaGoldBffTests", "AsaGoldBffTests\AsaGoldBffTests.csproj", "{76786011-4922-4EEF-AABC-94C9E1CD111A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9060C041-BA2B-455B-9BFD-DCC901C3A894}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9060C041-BA2B-455B-9BFD-DCC901C3A894}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9060C041-BA2B-455B-9BFD-DCC901C3A894}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76786011-4922-4EEF-AABC-94C9E1CD111A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76786011-4922-4EEF-AABC-94C9E1CD111A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76786011-4922-4EEF-AABC-94C9E1CD111A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76786011-4922-4EEF-AABC-94C9E1CD111A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
