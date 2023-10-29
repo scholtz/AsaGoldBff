@@ -72,6 +72,7 @@ namespace AsaGoldBff
              });
 
             builder.Services.AddSingleton<EmailValidationUseCase>();
+            builder.Services.AddSingleton<AccountUseCase>();
 
             #region Email
             var emailConfigured = false;

@@ -4,17 +4,33 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AsaGoldBff.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/v1")]
     public class ApiController : ControllerBase
     {
         private readonly EmailValidationUseCase emailValidationUseCase;
+        private readonly AccountUseCase accountUseCase;
         public ApiController(
-            EmailValidationUseCase emailValidationUseCase
+            EmailValidationUseCase emailValidationUseCase,
+            AccountUseCase accountUseCase
             )
         {
             this.emailValidationUseCase = emailValidationUseCase;
+            this.accountUseCase = accountUseCase;
         }
+
+        /// <summary>
+        /// User's account
+        /// </summary>
+        /// <param name="emailVerificationGuid"></param>
+        /// <returns></returns>
+        [HttpGet("account")]
+        public Task<AsaGoldRepository.Account?> GetAccount()
+        {
+            return accountUseCase.GetAccount(new Model.Auth.UserWithHeader(User, Request));
+        }
+
         /// <summary>
         /// Email verification
         /// </summary>
@@ -22,7 +38,6 @@ namespace AsaGoldBff.Controllers
         /// <param name="consent"></param>
         /// <param name="marketingConsent"></param>
         /// <returns></returns>
-        [Authorize]
         [HttpPost("send-verification-email")]
         public async Task<bool> SendVerificationEmail([FromForm] string email, [FromForm] string consent, [FromForm] bool marketingConsent)
         {
@@ -33,11 +48,11 @@ namespace AsaGoldBff.Controllers
         /// </summary>
         /// <param name="emailVerificationGuid"></param>
         /// <returns></returns>
-        [Authorize]
         [HttpPost("verify-email")]
         public async Task<bool> VerifyEmail([FromBody] Guid emailVerificationGuid)
         {
             return false;
         }
+
     }
 }
