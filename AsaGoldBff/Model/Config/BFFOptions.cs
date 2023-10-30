@@ -25,6 +25,10 @@
         /// <summary>
         /// ASA.Gold repository url
         /// </summary>
-        public string RepositoryUrl { get;  set; }
+        public string RepositoryUrl { get; set; }
+        /// <summary>
+        /// On email verificationwe can deposit to user some algo
+        /// </summary>
+        public ulong AirdropAlgoOnEmailVerification { get; set; } = 0;
     }
 }

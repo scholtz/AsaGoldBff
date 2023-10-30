@@ -1,16 +1,30 @@
-﻿using AsaGoldBff.Controllers.Email;
+﻿using Algorand.Algod;
+using Algorand;
+using AsaGoldBff.Controllers.Email;
 using AsaGoldBff.Model.Auth;
+using AsaGoldBff.Model.Email;
+using AsaGoldRepository;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using NLog.Web.LayoutRenderers;
 using System.Globalization;
 using System.Security.Claims;
+using AlgorandAuthentication;
+using Algorand.Utils;
+using AsaGoldBff.Model.Result;
 
 namespace AsaGoldBff.UseCase
 {
     public class EmailValidationUseCase
     {
+        /// <summary>
+        /// Unit tests can turn off validate time feature
+        /// </summary>
+        public static bool ValidateTime = true;
         private readonly IEmailSender emailSender;
         private readonly IOptionsMonitor<Model.Config.BFFOptions> options;
+        private readonly IOptionsMonitor<AlgorandAuthenticationOptions> algodOptions;
+
         /// <summary>
         /// constructor
         /// </summary>
@@ -19,11 +33,13 @@ namespace AsaGoldBff.UseCase
         /// <exception cref="Exception"></exception>
         public EmailValidationUseCase(
             IEmailSender emailSender,
-            IOptionsMonitor<Model.Config.BFFOptions> options
+            IOptionsMonitor<Model.Config.BFFOptions> options,
+            IOptionsMonitor<AlgorandAuthenticationOptions> algodOptions
             )
         {
             this.emailSender = emailSender;
             this.options = options;
+            this.algodOptions = algodOptions;
             if (string.IsNullOrEmpty(options.CurrentValue.RepositoryUrl)) throw new Exception("RepositoryUrl is empty");
         }
         /// <summary>
@@ -33,7 +49,7 @@ namespace AsaGoldBff.UseCase
         /// <returns></returns>
         public async Task<bool> SendVerificationEmail(string email, string constent, bool marketingConsent, UserWithHeader user)
         {
-            var client = new HttpClient();
+            using var client = new HttpClient();
 
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
             var repository = new AsaGoldRepository.Client(options.CurrentValue.RepositoryUrl, client);
@@ -65,10 +81,13 @@ namespace AsaGoldBff.UseCase
             {
                 if (userData.Data?.LastEmailValidationTime.HasValue == true)
                 {
-                    if (userData.Data.LastEmailValidationTime.Value.AddHours(1) > DateTimeOffset.UtcNow)
-                    //if (userData.Data.LastEmailValidationTime > DateTimeOffset.UtcNow)
+                    if (ValidateTime)
                     {
-                        throw new Exception("You have recently requested email validaiton. Please try again in one hour");
+                        if (userData.Data.LastEmailValidationTime.Value.AddHours(1) > DateTimeOffset.UtcNow)
+                        //if (userData.Data.LastEmailValidationTime > DateTimeOffset.UtcNow)
+                        {
+                            throw new Exception("You have recently requested email validaiton. Please try again in one hour");
+                        }
                     }
                 }
 
@@ -98,6 +117,95 @@ namespace AsaGoldBff.UseCase
             emailToSend.TermsLink = $"{options.CurrentValue.URL}/terms/{constent}";
 
             return await emailSender.SendEmail("Start your journey with ASA.Gold with validating your email", email, "", emailToSend);
+        }
+        /// <summary>
+        /// Returns
+        /// </summary>
+        /// <param name="emailVerificationGuid"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+
+        public async Task<SuccessWithTransaction> VerifyEmail(string emailVerificationGuid, UserWithHeader user)
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
+            var repository = new AsaGoldRepository.Client(options.CurrentValue.RepositoryUrl, client);
+            if (string.IsNullOrEmpty(user?.Name)) throw new ArgumentNullException("user");
+
+            EmailValidationDBBase? record = null;
+            try
+            {
+                record = await repository.EmailValidationGetByIdAsync(emailVerificationGuid.ToString());
+            }
+            catch (Exception ex)
+            {
+                if (!ex.Message.StartsWith("No Content"))
+                {
+                    throw; // else it is null
+                }
+                throw new Exception("Invalid email verification id");
+            }
+
+            if (record.CreatedBy != user.Name)
+            {
+                throw new Exception("Email validation was issued for different user");
+            }
+
+            if (record.Created.AddDays(7) < DateTimeOffset.UtcNow)
+            {
+                throw new Exception("Email validation is valid only for 7 days. Please create new validation request.");
+            }
+
+
+            var updatedAccount = await repository.AccountPatchAsync(user.Name, new List<AsaGoldRepository.AccountOperation>() {
+                new AsaGoldRepository.AccountOperation()
+                {
+                    Op = "replace",
+                    Path = "Consent",
+                    Value = record.Data.Consent
+                },
+                new AsaGoldRepository.AccountOperation()
+                {
+                    Op = "replace",
+                    Path = "Email",
+                    Value = record.Data.Email
+                },
+                new AsaGoldRepository.AccountOperation()
+                {
+                    Op = "replace",
+                    Path = "MarketingConsent",
+                    Value = record.Data.MarketingConsent
+                }
+            });
+            string? txId = null;
+            if (options.CurrentValue.AirdropAlgoOnEmailVerification > 0)
+            {
+                using var httpClient = HttpClientConfigurator.ConfigureHttpClient(algodOptions.CurrentValue.AlgodServer, algodOptions.CurrentValue.AlgodServerToken, algodOptions.CurrentValue.AlgodServerHeader);
+                DefaultApi algodApiInstance = new DefaultApi(httpClient);
+                var transParams = await algodApiInstance.TransactionParamsAsync();
+
+                var account = AlgorandARC76AccountDotNet.ARC76.GetAccount(options.CurrentValue.Account);
+                var payment = Algorand.Algod.Model.Transactions.PaymentTransaction.GetPaymentTransactionFromNetworkTransactionParameters(account.Address, new Algorand.Address(user.Name), options.CurrentValue.AirdropAlgoOnEmailVerification, "asa.gold", transParams);
+                var signed = payment.Sign(account);
+                try
+                {
+                    txId = (await Utils.SubmitTransaction(algodApiInstance, signed))?.Txid;
+                }
+                catch (Algorand.ApiException<Algorand.Algod.Model.ErrorResponse> e)
+                {
+                    Console.Error.WriteLine(e.Result.Message);
+                    if (!string.IsNullOrEmpty(e.Result.Message)) throw new Exception(e.Result.Message);
+                    throw;
+                }
+            }
+
+
+            return new SuccessWithTransaction()
+            {
+                TransactionId = txId
+            };
         }
     }
 }

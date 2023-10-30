@@ -1,3 +1,5 @@
+using AsaGoldBff.Model.Email;
+using AsaGoldBff.Model.Result;
 using AsaGoldBff.UseCase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,9 +51,9 @@ namespace AsaGoldBff.Controllers
         /// <param name="emailVerificationGuid"></param>
         /// <returns></returns>
         [HttpPost("verify-email")]
-        public async Task<bool> VerifyEmail([FromBody] Guid emailVerificationGuid)
+        public async Task<SuccessWithTransaction> VerifyEmail([FromBody] Guid emailVerificationGuid)
         {
-            return false;
+            return await emailValidationUseCase.VerifyEmail(emailVerificationGuid.ToString(), new Model.Auth.UserWithHeader(User, Request));
         }
 
     }

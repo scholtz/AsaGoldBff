@@ -7,6 +7,9 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Algorand.Algod;
 using Algorand.Utils;
+using Castle.Core.Smtp;
+using AsaGoldBff.Model.Email;
+using AlgorandAuthentication;
 
 namespace AsaGoldBffTests
 {
@@ -14,17 +17,28 @@ namespace AsaGoldBffTests
     {
         private EmailValidationUseCase _validationUseCase;
         private AsaGoldBff.Model.Auth.UserWithHeader user;
+        private NoEmailSender emailSender;
         [SetUp]
         public void Setup()
         {
-            var emailSender = new NoEmailSender();
-            BFFOptions au = new BFFOptions()
+            emailSender = new NoEmailSender();
+
+            BFFOptions bffOptions = new BFFOptions()
             {
                 URL = "https://www.asa.gold",
-                RepositoryUrl = "https://localhost:44333"
+                RepositoryUrl = "https://localhost:44333",
+                AirdropAlgoOnEmailVerification = 100000,
+                Account = "PublicTestAccount"
             };
-            var monitor = Mock.Of<IOptionsMonitor<BFFOptions>>(_ => _.CurrentValue == au);
-            _validationUseCase = new EmailValidationUseCase(emailSender, monitor);
+            var bffOptionsMock = Mock.Of<IOptionsMonitor<BFFOptions>>(_ => _.CurrentValue == bffOptions);
+
+            AlgorandAuthenticationOptions algorandAuthenticationOptions = new AlgorandAuthenticationOptions()
+            {
+                AlgodServer = "https://testnet-api.algonode.cloud"
+            };
+            var algorandAuthenticationOptionsMock = Mock.Of<IOptionsMonitor<AlgorandAuthenticationOptions>>(_ => _.CurrentValue == algorandAuthenticationOptions);
+
+            _validationUseCase = new EmailValidationUseCase(emailSender, bffOptionsMock, algorandAuthenticationOptionsMock);
             var account = AlgorandARC76AccountDotNet.ARC76.GetAccount("AccountForTests");
 
             var httpClient = HttpClientConfigurator.ConfigureHttpClient("https://testnet-api.algonode.cloud", "");
@@ -44,8 +58,28 @@ namespace AsaGoldBffTests
         [Test]
         public async Task SendVerificationEmail()
         {
+            EmailValidationUseCase.ValidateTime = false;
+            emailSender.Data.Clear();
             var ret = await _validationUseCase.SendVerificationEmail("test@test.com", "1", true, user);
             Assert.That(ret, Is.True);
+            Assert.That(emailSender.Data.Count, Is.EqualTo(1));
+        }
+        [Test]
+        public async Task VerifyEmail()
+        {
+            EmailValidationUseCase.ValidateTime = false;
+            emailSender.Data.Clear();
+            var rand = (new Random()).Next(1000000, 9999999);
+            var ret = await _validationUseCase.SendVerificationEmail($"{rand}@test.com", "1", true, user);
+            Assert.That(ret, Is.True);
+
+            Assert.That(emailSender.Data.Count, Is.EqualTo(1));
+            var email = emailSender.Data.First();
+            var validationEmail = email.Value.data as EmailValidationEmail;
+            Assert.That(validationEmail, Is.Not.Null);
+            var retVerify = await _validationUseCase.VerifyEmail(validationEmail.Code, user);
+            Assert.That(retVerify.Success, Is.True);
+
         }
     }
 }

@@ -51,6 +51,7 @@ namespace AsaGoldBff
 
             builder.Services.AddProblemDetails();
             builder.Services.Configure<Model.Config.BFFOptions>(builder.Configuration.GetSection("BFF"));
+            builder.Services.Configure<AlgorandAuthenticationOptions>(builder.Configuration.GetSection("AlgorandAuthentication"));
 
             var algorandAuthenticationOptions = new AlgorandAuthenticationOptions();
             builder.Configuration.GetSection("AlgorandAuthentication").Bind(algorandAuthenticationOptions);
