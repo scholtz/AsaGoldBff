@@ -76,6 +76,7 @@ namespace AsaGoldBff
             builder.Services.AddSingleton<AccountUseCase>();
             var corsConfig = builder.Configuration.GetSection("Cors").AsEnumerable().Select(k => k.Value).Where(k => !string.IsNullOrEmpty(k)).ToArray();
             if (corsConfig?.Any() != true) throw new Exception("Cors not setup");
+            logger.Info($"Cors: {string.Join(",", corsConfig)}");
             builder.Services.AddCors(options =>
             {
                 options.AddDefaultPolicy(
@@ -157,14 +158,10 @@ namespace AsaGoldBff
 
             app.UseSwagger();
             app.UseSwaggerUI();
-            app.UseHttpsRedirection();
-
+            app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
-
-
             app.MapControllers();
-
             app.Run();
         }
     }
