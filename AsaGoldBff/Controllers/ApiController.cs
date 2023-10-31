@@ -49,12 +49,12 @@ namespace AsaGoldBff.Controllers
         /// <summary>
         /// Email verification
         /// </summary>
-        /// <param name="emailVerificationGuid"></param>
+        /// <param name="code">Email verification code guid</param>
         /// <returns></returns>
-        [HttpPost("verify-email")]
-        public async Task<SuccessWithTransaction> VerifyEmail([FromBody] Guid emailVerificationGuid)
+        [HttpPost("verify-code-from-email")]
+        public async Task<SuccessWithTransaction> VerifyCodeFromEmail([FromForm] Guid code)
         {
-            return await emailValidationUseCase.VerifyEmail(emailVerificationGuid.ToString(), new Model.Auth.UserWithHeader(User, Request));
+            return await emailValidationUseCase.VerifyEmail(code.ToString(), new Model.Auth.UserWithHeader(User, Request));
         }
 
     }
