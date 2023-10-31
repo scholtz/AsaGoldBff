@@ -2,11 +2,13 @@
 using AlgorandAuthentication;
 using AsaGoldBff.Controllers.Email;
 using AsaGoldBff.UseCase;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using NLog;
 using NLog.Web;
+using System.Net;
 using System.Reflection;
 
 namespace AsaGoldBff
@@ -27,6 +29,10 @@ namespace AsaGoldBff
                 {
                     options.SuppressMapClientErrors = true;
                 });
+            builder.Services.AddProblemDetails(options =>
+                options.CustomizeProblemDetails = ctx =>
+                        ctx.ProblemDetails.Extensions.Add("nodeId", Environment.MachineName));
+
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -53,7 +59,6 @@ namespace AsaGoldBff
                 }
                 );
 
-            builder.Services.AddProblemDetails();
             builder.Services.Configure<Model.Config.BFFOptions>(builder.Configuration.GetSection("BFF"));
             builder.Services.Configure<AlgorandAuthenticationOptions>(builder.Configuration.GetSection("AlgorandAuthentication"));
             var algorandAuthenticationOptions = new AlgorandAuthenticationOptions();
@@ -161,8 +166,12 @@ namespace AsaGoldBff
 
             app.UseSwagger();
             app.UseSwaggerUI();
-            app.UseExceptionHandler();
-            app.UseStatusCodePages();
+            app.UseExceptionHandler(exceptionHandlerApp
+                => exceptionHandlerApp.Run(async context
+                    => await Results.Problem()
+                                 .ExecuteAsync(context)));
+
+
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();

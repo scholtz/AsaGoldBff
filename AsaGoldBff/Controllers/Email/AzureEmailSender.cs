@@ -67,12 +67,12 @@ namespace AsaGoldBff.Controllers.Email
                     throw new Exception("Please define data for email");
                 }
                 var recepients = new Azure.Communication.Email.EmailRecipients(new List<Azure.Communication.Email.EmailAddress>() { new Azure.Communication.Email.EmailAddress(toEmail, toName) });
-                var content = new Azure.Communication.Email.EmailContent("Subject");
-
+                var content = new Azure.Communication.Email.EmailContent(subject);
                 var source = File.ReadAllText($"EmailTemplates/{data.TemplateId}.html");
                 var template = Handlebars.Compile(source);
                 content.Html = template(data);
                 var emailMessage = new Azure.Communication.Email.EmailMessage(fromEmail, recepients, content);
+                
                 await emailClient.SendAsync(Azure.WaitUntil.Completed, emailMessage);
                 return true;
             }
