@@ -74,6 +74,20 @@ namespace AsaGoldBff
 
             builder.Services.AddSingleton<EmailValidationUseCase>();
             builder.Services.AddSingleton<AccountUseCase>();
+            var corsConfig = builder.Configuration.GetSection("Cors").AsEnumerable().Select(k => k.Value).Where(k => !string.IsNullOrEmpty(k)).ToArray();
+            if (corsConfig?.Any() != true) throw new Exception("Cors not setup");
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                builder =>
+                {
+                    builder.WithOrigins(corsConfig)
+                                        .SetIsOriginAllowedToAllowWildcardSubdomains()
+                                        .AllowAnyMethod()
+                                        .AllowAnyHeader()
+                                        .AllowCredentials();
+                });
+            });
 
             #region Email
             var emailConfigured = false;
