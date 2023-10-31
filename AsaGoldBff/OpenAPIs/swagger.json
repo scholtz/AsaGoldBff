@@ -861,7 +861,11 @@
             "type": "string",
             "nullable": true
           },
-          "consent": {
+          "termsAndConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "gdpr": {
             "type": "string",
             "nullable": true
           },
@@ -925,7 +929,11 @@
             "type": "string",
             "nullable": true
           },
-          "consent": {
+          "termsAndConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "gdpr": {
             "type": "string",
             "nullable": true
           },
@@ -1033,7 +1041,11 @@
             "type": "string",
             "nullable": true
           },
-          "consent": {
+          "termsAndConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "gdpr": {
             "type": "string",
             "nullable": true
           },

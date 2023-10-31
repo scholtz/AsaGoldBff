@@ -37,13 +37,14 @@ namespace AsaGoldBff.Controllers
         /// Email verification
         /// </summary>
         /// <param name="email"></param>
-        /// <param name="consent"></param>
+        /// <param name="terms">Terms and conditions version</param>
+        /// <param name="gdpr">GDPR policy version</param>
         /// <param name="marketingConsent"></param>
         /// <returns></returns>
         [HttpPost("send-verification-email")]
-        public async Task<bool> SendVerificationEmail([FromForm] string email, [FromForm] string consent, [FromForm] bool marketingConsent)
+        public async Task<bool> SendVerificationEmail([FromForm] string email, [FromForm] string terms, [FromForm] string gdpr, [FromForm] bool marketingConsent)
         {
-            return await emailValidationUseCase.SendVerificationEmail(email, consent, marketingConsent, new Model.Auth.UserWithHeader(User, Request));
+            return await emailValidationUseCase.SendVerificationEmail(email, terms, gdpr, marketingConsent, new Model.Auth.UserWithHeader(User, Request));
         }
         /// <summary>
         /// Email verification

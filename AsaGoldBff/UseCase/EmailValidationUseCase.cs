@@ -47,7 +47,7 @@ namespace AsaGoldBff.UseCase
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<bool> SendVerificationEmail(string email, string constent, bool marketingConsent, UserWithHeader user)
+        public async Task<bool> SendVerificationEmail(string email, string terms, string gdpr,  bool marketingConsent, UserWithHeader user)
         {
             using var client = new HttpClient();
 
@@ -71,7 +71,8 @@ namespace AsaGoldBff.UseCase
             {
                 userData = await repository.AccountUpsertAsync(user.Name, new AsaGoldRepository.Account()
                 {
-                    Consent = "",
+                    Gdpr = "",
+                    TermsAndConditions = "",
                     Email = "",
                     MarketingConsent = false,
                     LastEmailValidationTime = DateTimeOffset.UtcNow
@@ -105,7 +106,8 @@ namespace AsaGoldBff.UseCase
             var repo = await repository.EmailValidationUpsertAsync(Guid.NewGuid().ToString(), new AsaGoldRepository.EmailValidation()
             {
                 Account = user.Name,
-                Consent = constent,
+                TermsAndConditions = terms,
+                Gdpr = gdpr,
                 Email = email,
                 MarketingConsent = marketingConsent
             });
@@ -113,8 +115,8 @@ namespace AsaGoldBff.UseCase
             emailToSend.Code = repo.Id;
             emailToSend.Link = $"{options.CurrentValue.URL}/email-validation/{repo.Id}";
             emailToSend.HasNotMarketingAgreement = !marketingConsent;
-            emailToSend.GDPRLink = $"{options.CurrentValue.URL}/gdpr/{constent}";
-            emailToSend.TermsLink = $"{options.CurrentValue.URL}/terms/{constent}";
+            emailToSend.GDPRLink = $"{options.CurrentValue.URL}/gdpr/{gdpr}";
+            emailToSend.TermsLink = $"{options.CurrentValue.URL}/terms/{terms}";
 
             return await emailSender.SendEmail("Start your journey with ASA.Gold with validating your email", email, "", emailToSend);
         }
@@ -163,8 +165,14 @@ namespace AsaGoldBff.UseCase
                 new AsaGoldRepository.AccountOperation()
                 {
                     Op = "replace",
-                    Path = "Consent",
-                    Value = record.Data.Consent
+                    Path = "TermsAndConditions",
+                    Value = record.Data.TermsAndConditions
+                },
+                new AsaGoldRepository.AccountOperation()
+                {
+                    Op = "replace",
+                    Path = "GDPR",
+                    Value = record.Data.Gdpr
                 },
                 new AsaGoldRepository.AccountOperation()
                 {

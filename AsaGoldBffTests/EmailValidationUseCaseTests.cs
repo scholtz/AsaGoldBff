@@ -60,7 +60,7 @@ namespace AsaGoldBffTests
         {
             EmailValidationUseCase.ValidateTime = false;
             emailSender.Data.Clear();
-            var ret = await _validationUseCase.SendVerificationEmail("test@test.com", "1", true, user);
+            var ret = await _validationUseCase.SendVerificationEmail("test@test.com", "1", "1", true, user);
             Assert.That(ret, Is.True);
             Assert.That(emailSender.Data.Count, Is.EqualTo(1));
         }
@@ -70,7 +70,7 @@ namespace AsaGoldBffTests
             EmailValidationUseCase.ValidateTime = false;
             emailSender.Data.Clear();
             var rand = (new Random()).Next(1000000, 9999999);
-            var ret = await _validationUseCase.SendVerificationEmail($"{rand}@test.com", "1", true, user);
+            var ret = await _validationUseCase.SendVerificationEmail($"{rand}@test.com", "1", "1", true, user);
             Assert.That(ret, Is.True);
 
             Assert.That(emailSender.Data.Count, Is.EqualTo(1));
