@@ -166,12 +166,15 @@ namespace AsaGoldBff
 
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseStatusCodePages();
+
             app.UseExceptionHandler(exceptionHandlerApp
                 => exceptionHandlerApp.Run(async context
-                    => await Results.Problem()
-                                 .ExecuteAsync(context)));
-
-
+                    =>
+                {
+                    var exception = context.Features.Get<IExceptionHandlerPathFeature>().Error;
+                    await Results.Problem(exception.Message, null, 400, exception.Message).ExecuteAsync(context);
+                }));
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
