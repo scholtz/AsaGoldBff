@@ -165,7 +165,7 @@ namespace AsaGoldBff.UseCase
             }
 
             /// set verification to be used 
-            var updatedVerification = await repository.EmailValidationPatchAsync(user.Name, new List<AsaGoldRepository.EmailValidationOperation>() {
+            var updatedVerification = await repository.EmailValidationPatchAsync(emailVerificationGuid, new List<AsaGoldRepository.EmailValidationOperation>() {
                 new AsaGoldRepository.EmailValidationOperation()
                 {
                     Op = "replace",
