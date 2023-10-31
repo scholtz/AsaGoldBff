@@ -47,7 +47,7 @@ namespace AsaGoldBff.UseCase
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<bool> SendVerificationEmail(string email, string terms, string gdpr,  bool marketingConsent, UserWithHeader user)
+        public async Task<bool> SendVerificationEmail(string email, string terms, string gdpr, bool marketingConsent, UserWithHeader user)
         {
             using var client = new HttpClient();
 
@@ -159,7 +159,20 @@ namespace AsaGoldBff.UseCase
             {
                 throw new Exception("Email validation is valid only for 7 days. Please create new validation request.");
             }
+            if (record.Data.Used)
+            {
+                throw new Exception("This email verification code has been already used.");
+            }
 
+            /// set verification to be used 
+            var updatedVerification = await repository.EmailValidationPatchAsync(user.Name, new List<AsaGoldRepository.EmailValidationOperation>() {
+                new AsaGoldRepository.EmailValidationOperation()
+                {
+                    Op = "replace",
+                    Path = "Used",
+                    Value = true
+                }
+            });
 
             var updatedAccount = await repository.AccountPatchAsync(user.Name, new List<AsaGoldRepository.AccountOperation>() {
                 new AsaGoldRepository.AccountOperation()

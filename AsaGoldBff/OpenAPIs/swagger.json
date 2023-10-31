@@ -632,6 +632,73 @@
             "oauth2": [ ]
           }
         ]
+      },
+      "patch": {
+        "tags": [
+          "AsaGoldRepository"
+        ],
+        "operationId": "EmailValidationPatch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The  ID.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EmailValidationOperation"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailValidationDBBase"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          },
+          {
+            "oauth2": [ ]
+          }
+        ]
       }
     },
     "/api/v1/user-setting": {
@@ -1051,6 +1118,9 @@
           },
           "marketingConsent": {
             "type": "boolean"
+          },
+          "used": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -1088,6 +1158,30 @@
           },
           "deletedBy": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EmailValidationOperation": {
+        "type": "object",
+        "properties": {
+          "operationType": {
+            "$ref": "#/components/schemas/OperationType"
+          },
+          "path": {
+            "type": "string",
+            "nullable": true
+          },
+          "op": {
+            "type": "string",
+            "nullable": true
+          },
+          "from": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
             "nullable": true
           }
         },
