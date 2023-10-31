@@ -22,7 +22,11 @@ namespace AsaGoldBff
             builder.Host.UseNLog();
 
             // Add services to the container.
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.SuppressMapClientErrors = true;
+                });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -52,7 +56,6 @@ namespace AsaGoldBff
             builder.Services.AddProblemDetails();
             builder.Services.Configure<Model.Config.BFFOptions>(builder.Configuration.GetSection("BFF"));
             builder.Services.Configure<AlgorandAuthenticationOptions>(builder.Configuration.GetSection("AlgorandAuthentication"));
-
             var algorandAuthenticationOptions = new AlgorandAuthenticationOptions();
             builder.Configuration.GetSection("AlgorandAuthentication").Bind(algorandAuthenticationOptions);
 
@@ -158,6 +161,8 @@ namespace AsaGoldBff
 
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseExceptionHandler();
+            app.UseStatusCodePages();
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
