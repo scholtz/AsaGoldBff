@@ -179,6 +179,14 @@ namespace AsaGoldBff
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+
+
+            logger.Info("Initializing singletons");
+            _ = app.Services.GetService<EmailValidationUseCase>();
+            _ = app.Services.GetService<AccountUseCase>();
+
+            logger.Info("Starting app");
+
             app.Run();
         }
     }
