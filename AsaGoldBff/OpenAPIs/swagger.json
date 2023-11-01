@@ -943,6 +943,10 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "funded": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "additionalProperties": false
@@ -1121,6 +1125,10 @@
           },
           "used": {
             "type": "boolean"
+          },
+          "fundTransaction": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

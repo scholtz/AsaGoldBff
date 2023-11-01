@@ -212,22 +212,55 @@ namespace AsaGoldBff.UseCase
             string? txId = null;
             if (options.CurrentValue.AirdropAlgoOnEmailVerification > 0)
             {
-                using var httpClient = HttpClientConfigurator.ConfigureHttpClient(algodOptions.CurrentValue.AlgodServer, algodOptions.CurrentValue.AlgodServerToken, algodOptions.CurrentValue.AlgodServerHeader);
-                DefaultApi algodApiInstance = new DefaultApi(httpClient);
-                var transParams = await algodApiInstance.TransactionParamsAsync();
+                var userAccount = await repository.AccountGetByIdAsync(user.Name);
+                var toFund = (ulong)((long)options.CurrentValue.AirdropAlgoOnEmailVerification - userAccount.Data.Funded);
 
-                var account = AlgorandARC76AccountDotNet.ARC76.GetAccount(options.CurrentValue.Account);
-                var payment = Algorand.Algod.Model.Transactions.PaymentTransaction.GetPaymentTransactionFromNetworkTransactionParameters(account.Address, new Algorand.Address(user.Name), options.CurrentValue.AirdropAlgoOnEmailVerification, "asa.gold", transParams);
-                var signed = payment.Sign(account);
-                try
+                if (toFund > 0 && toFund < 10000000000)
                 {
-                    txId = (await Utils.SubmitTransaction(algodApiInstance, signed))?.Txid;
-                }
-                catch (Algorand.ApiException<Algorand.Algod.Model.ErrorResponse> e)
-                {
-                    Console.Error.WriteLine(e.Result.Message);
-                    if (!string.IsNullOrEmpty(e.Result.Message)) throw new Exception(e.Result.Message);
-                    throw;
+                    using var httpClient = HttpClientConfigurator.ConfigureHttpClient(algodOptions.CurrentValue.AlgodServer, algodOptions.CurrentValue.AlgodServerToken, algodOptions.CurrentValue.AlgodServerHeader);
+                    DefaultApi algodApiInstance = new DefaultApi(httpClient);
+                    var transParams = await algodApiInstance.TransactionParamsAsync();
+
+                    var account = AlgorandARC76AccountDotNet.ARC76.GetAccount(options.CurrentValue.Account);
+                    var payment = Algorand.Algod.Model.Transactions.PaymentTransaction.GetPaymentTransactionFromNetworkTransactionParameters(account.Address, new Algorand.Address(user.Name), toFund, "asa.gold", transParams);
+
+                    var funded = userAccount.Data.Funded + (long)toFund;
+                    updatedAccount = await repository.AccountPatchAsync(user.Name, new List<AsaGoldRepository.AccountOperation>() {
+                        new AsaGoldRepository.AccountOperation()
+                        {
+                            Op = "replace",
+                            Path = "Funded",
+                            Value = funded
+                        }
+                    });
+                    if (updatedAccount.Data.Funded != funded)
+                    {
+                        throw new Exception("Error in funding account storage");
+                    }
+
+                    var updatedValidation = await repository.EmailValidationPatchAsync(emailVerificationGuid, new List<AsaGoldRepository.EmailValidationOperation>() {
+                        new AsaGoldRepository.EmailValidationOperation()
+                        {
+                            Op = "replace",
+                            Path = "FundTransaction",
+                            Value = payment.TxID()
+                        }
+                    });
+                    if (updatedValidation.Data.FundTransaction != payment.TxID())
+                    {
+                        throw new Exception("Error in funding account");
+                    }
+                    var signed = payment.Sign(account);
+                    try
+                    {
+                        txId = (await Utils.SubmitTransaction(algodApiInstance, signed))?.Txid;
+                    }
+                    catch (Algorand.ApiException<Algorand.Algod.Model.ErrorResponse> e)
+                    {
+                        Console.Error.WriteLine(e.Result.Message);
+                        if (!string.IsNullOrEmpty(e.Result.Message)) throw new Exception(e.Result.Message);
+                        throw;
+                    }
                 }
             }
 
