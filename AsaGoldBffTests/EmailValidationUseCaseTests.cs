@@ -1,15 +1,14 @@
-using Algorand.Algod.Model.Transactions;
 using Algorand;
+using Algorand.Algod;
+using Algorand.Algod.Model.Transactions;
+using AlgorandAuthentication;
 using AsaGoldBff.Controllers.Email;
 using AsaGoldBff.Model.Config;
+using AsaGoldBff.Model.Email;
 using AsaGoldBff.UseCase;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using Algorand.Algod;
-using Algorand.Utils;
-using Castle.Core.Smtp;
-using AsaGoldBff.Model.Email;
-using AlgorandAuthentication;
 
 namespace AsaGoldBffTests
 {
@@ -37,8 +36,9 @@ namespace AsaGoldBffTests
                 AlgodServer = "https://testnet-api.algonode.cloud"
             };
             var algorandAuthenticationOptionsMock = Mock.Of<IOptionsMonitor<AlgorandAuthenticationOptions>>(_ => _.CurrentValue == algorandAuthenticationOptions);
+            var mock = new Mock<ILogger<EmailValidationUseCase>>();
 
-            _validationUseCase = new EmailValidationUseCase(emailSender, bffOptionsMock, algorandAuthenticationOptionsMock);
+            _validationUseCase = new EmailValidationUseCase(emailSender, bffOptionsMock, algorandAuthenticationOptionsMock, mock.Object);
             var account = AlgorandARC76AccountDotNet.ARC76.GetAccount("AccountForTests");
 
             var httpClient = HttpClientConfigurator.ConfigureHttpClient("https://testnet-api.algonode.cloud", "");

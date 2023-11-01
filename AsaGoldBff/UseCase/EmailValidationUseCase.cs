@@ -24,6 +24,7 @@ namespace AsaGoldBff.UseCase
         private readonly IEmailSender emailSender;
         private readonly IOptionsMonitor<Model.Config.BFFOptions> options;
         private readonly IOptionsMonitor<AlgorandAuthenticationOptions> algodOptions;
+        private readonly ILogger<EmailValidationUseCase> logger;
 
         /// <summary>
         /// constructor
@@ -34,13 +35,18 @@ namespace AsaGoldBff.UseCase
         public EmailValidationUseCase(
             IEmailSender emailSender,
             IOptionsMonitor<Model.Config.BFFOptions> options,
-            IOptionsMonitor<AlgorandAuthenticationOptions> algodOptions
+            IOptionsMonitor<AlgorandAuthenticationOptions> algodOptions,
+            ILogger<EmailValidationUseCase> logger
             )
         {
             this.emailSender = emailSender;
             this.options = options;
             this.algodOptions = algodOptions;
             if (string.IsNullOrEmpty(options.CurrentValue.RepositoryUrl)) throw new Exception("RepositoryUrl is empty");
+
+            var account = AlgorandARC76AccountDotNet.ARC76.GetAccount(options.CurrentValue.Account);
+            this.logger = logger;
+            logger.LogInformation($"ARC76 account: {account.Address.EncodeAsString()}");
         }
         /// <summary>
         /// Send email to user
@@ -49,6 +55,7 @@ namespace AsaGoldBff.UseCase
         /// <returns></returns>
         public async Task<bool> SendVerificationEmail(string email, string terms, string gdpr, bool marketingConsent, UserWithHeader user)
         {
+            logger.LogInformation($"SendVerificationEmail {email} {terms} {gdpr} {marketingConsent}");
             using var client = new HttpClient();
 
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
@@ -131,6 +138,8 @@ namespace AsaGoldBff.UseCase
 
         public async Task<SuccessWithTransaction> VerifyEmail(string emailVerificationGuid, UserWithHeader user)
         {
+            logger.LogInformation($"VerifyEmail {emailVerificationGuid}");
+
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
             var repository = new AsaGoldRepository.Client(options.CurrentValue.RepositoryUrl, client);
