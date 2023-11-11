@@ -59,7 +59,7 @@ namespace AsaGoldBff.UseCase
         /// <param name="user"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public async Task<KYCRequestDBBase?> UpdateProfile(KYCRequest request, UserWithHeader user)
+        public async Task<string?> UpdateProfile(KYCRequest request, UserWithHeader user)
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
@@ -77,7 +77,7 @@ namespace AsaGoldBff.UseCase
                     Value = storedRequest.Id
                 }
             });
-            return storedRequest;
+            return requestId;
         }
         /// <summary>
         /// Return user's profile to user
