@@ -1,5 +1,8 @@
 ﻿using AsaGoldBff.Controllers.Email;
 using AsaGoldBff.Model.Auth;
+using AsaGoldBff.Model.Result;
+using AsaGoldBff.Model.Settings;
+using AsaGoldRepository;
 using Microsoft.Extensions.Options;
 
 namespace AsaGoldBff.UseCase
@@ -31,7 +34,7 @@ namespace AsaGoldBff.UseCase
         {
             if (string.IsNullOrEmpty(user?.Name)) throw new ArgumentNullException("user");
 
-            var client = new HttpClient();
+            using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
             var repository = new AsaGoldRepository.Client(options.CurrentValue.RepositoryUrl, client);
 
@@ -48,6 +51,48 @@ namespace AsaGoldBff.UseCase
                 }
                 return null;
             }
+        }
+        /// <summary>
+        /// User can update his KYC form. In this case we create new update request and put the requestid to his account.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<KYCRequestDBBase?> UpdateProfile(KYCRequest request, UserWithHeader user)
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
+            var repository = new AsaGoldRepository.Client(options.CurrentValue.RepositoryUrl, client);
+            var userData = await repository.AccountGetByIdAsync(user.Name);
+            if (userData == null) throw new Exception("Please create the account first by validating email");
+            if (string.IsNullOrEmpty(userData.Data.TermsAndConditions)) throw new Exception("Please create the account first by validating email and consent");
+            var requestId = Guid.NewGuid().ToString();
+            var storedRequest = await repository.KYCRequestUpsertAsync(requestId, request);
+            var updatedAccount = await repository.AccountPatchAsync(user.Name, new List<AsaGoldRepository.AccountOperation>() {
+                new AsaGoldRepository.AccountOperation()
+                {
+                    Op = "replace",
+                    Path = "LastKYCRequestId",
+                    Value = storedRequest.Id
+                }
+            });
+            return storedRequest;
+        }
+        /// <summary>
+        /// Return user's profile to user
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public async Task<KYCRequest?> GetProfile(UserWithHeader user)
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
+            var repository = new AsaGoldRepository.Client(options.CurrentValue.RepositoryUrl, client);
+            var userData = await repository.AccountGetByIdAsync(user.Name);
+            if (userData == null || string.IsNullOrEmpty(userData.Data.LastKYCRequestId)) return null;
+            var request = await repository.KYCRequestGetByIdAsync(userData.Data.LastKYCRequestId);
+            return request.Data;
         }
     }
 }

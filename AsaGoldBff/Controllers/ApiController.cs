@@ -1,6 +1,7 @@
 using AsaGoldBff.Model.Email;
 using AsaGoldBff.Model.Result;
 using AsaGoldBff.UseCase;
+using AsaGoldRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -57,5 +58,25 @@ namespace AsaGoldBff.Controllers
             return await emailValidationUseCase.VerifyEmail(code.ToString(), new Model.Auth.UserWithHeader(User, Request));
         }
 
+        /// <summary>
+        /// User can update his KYC form. In this case we create new update request and put the requestid to his account.
+        /// </summary>
+        /// <param name="request">User profile change request</param>
+        /// <returns></returns>
+        [HttpPost("update-profile")]
+        public async Task<KYCRequestDBBase?> UpdateProfile([FromForm] AsaGoldRepository.KYCRequest request)
+        {
+            return await accountUseCase.UpdateProfile(request, new Model.Auth.UserWithHeader(User, Request));
+        }
+
+        /// <summary>
+        /// Return user's profile to user
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("profile")]
+        public Task<KYCRequest?> GetProfile()
+        {
+            return accountUseCase.GetProfile(new Model.Auth.UserWithHeader(User, Request));
+        }
     }
 }
