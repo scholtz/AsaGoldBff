@@ -64,7 +64,7 @@ namespace AsaGoldBff.Controllers
         /// <param name="request">User profile change request</param>
         /// <returns></returns>
         [HttpPost("update-profile")]
-        public async Task<string?> UpdateProfile([FromForm] AsaGoldRepository.KYCRequest request)
+        public async Task<string?> UpdateProfile([FromBody] AsaGoldRepository.KYCRequest request)
         {
             return await accountUseCase.UpdateProfile(request, new Model.Auth.UserWithHeader(User, Request));
         }

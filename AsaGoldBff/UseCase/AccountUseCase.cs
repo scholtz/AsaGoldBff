@@ -61,6 +61,8 @@ namespace AsaGoldBff.UseCase
         /// <exception cref="Exception"></exception>
         public async Task<string?> UpdateProfile(KYCRequest request, UserWithHeader user)
         {
+            if (string.IsNullOrEmpty(request.LastName)) throw new Exception("Last name is mandatory");
+            if (string.IsNullOrEmpty(request.FirstName)) throw new Exception("First name is mandatory");
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SigTx", user.Header.Replace("SigTx ", ""));
             var repository = new AsaGoldRepository.Client(options.CurrentValue.RepositoryUrl, client);
