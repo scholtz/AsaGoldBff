@@ -83,6 +83,19 @@ namespace AsaGoldBff.Controllers
         {
             return accountUseCase.GetProfile(new Model.Auth.UserWithHeader(User, Request));
         }
+
+
+        /// <summary>
+        /// Return user's profile to user
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        [HttpGet("rfq")]
+        public Task<RFQ?> RFQ([FromQuery] decimal amount, [FromQuery] string currency)
+        {
+            return null;
+        }
+
         /// <summary>
         /// List of mainnet accounts managed by GoldDAO
         /// </summary>
