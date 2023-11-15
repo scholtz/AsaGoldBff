@@ -15,6 +15,7 @@ namespace AsaGoldBff
 {
     public class Program
     {
+        public static HashSet<string> Admins = new HashSet<string>();
         public static void Main(string[] args)
         {
             var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
@@ -97,6 +98,13 @@ namespace AsaGoldBff
                                         .AllowCredentials();
                 });
             });
+
+            var admins = builder.Configuration.GetSection("Admins").AsEnumerable().Select(k => k.Value).Where(k => !string.IsNullOrEmpty(k)).Select(k => k.ToString()).ToHashSet();
+            if (admins?.Any() == true)
+            {
+                Admins = admins;
+                logger.Info($"Admins: {string.Join(",", Admins)}");
+            }
 
             #region Email
             var emailConfigured = false;

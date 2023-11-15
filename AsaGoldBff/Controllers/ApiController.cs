@@ -78,5 +78,23 @@ namespace AsaGoldBff.Controllers
         {
             return accountUseCase.GetProfile(new Model.Auth.UserWithHeader(User, Request));
         }
+        /// <summary>
+        /// List of mainnet accounts managed by GoldDAO
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("dao-managed-accounts")]
+        public string[] DAOAccounts()
+        {
+            return new string[]
+            {
+                "GOPQRISPHSWZBLHM2K67RJNSELDQEDNCL4DS3FTICW2Q2UM3KZWEME7BPE",
+                "AC5MB73BJFJKCVDOVJWG6QSUVTGMPL2UUYHGXEG6CQWI5XQ4OAHVZQ4Z6U",
+                "N43YZHJB4LDJQZJH3RIOQP5WVPJQWWX5ROEUZRNZCRON64XMNXPJG3PLJU",
+                "GNBZ4YN24HLCKFDVAVKEO5SZYZME3ERXHY5ORDCE6VD4QKT372OXDUOTHU",
+                "UDEXJH6KEWKQEZUVR24XCJIXPOFGOWDF2LI2XTBIZFK4IFCSZJTXQ2DTFU",
+                "OAOYIJWXVC44DBCX5GKCDZVDGGHQJFAKHLTYDCT5DKJPQL7TNWLUFH5KOM"
+            };
+        }
+        
     }
 }
