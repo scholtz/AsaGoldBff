@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AsaGoldBff.Controllers
 {
-    [Authorize]
+    
     [ApiController]
     [Route("api/v1")]
     public class ApiController : ControllerBase
@@ -28,6 +28,7 @@ namespace AsaGoldBff.Controllers
         /// </summary>
         /// <param name="emailVerificationGuid"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpGet("account")]
         public Task<AsaGoldRepository.Account?> GetAccount()
         {
@@ -42,6 +43,7 @@ namespace AsaGoldBff.Controllers
         /// <param name="gdpr">GDPR policy version</param>
         /// <param name="marketingConsent"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPost("send-verification-email")]
         public async Task<bool> SendVerificationEmail([FromForm] string email, [FromForm] string terms, [FromForm] string gdpr, [FromForm] bool marketingConsent)
         {
@@ -52,6 +54,7 @@ namespace AsaGoldBff.Controllers
         /// </summary>
         /// <param name="code">Email verification code guid</param>
         /// <returns></returns>
+        [Authorize]
         [HttpPost("verify-code-from-email")]
         public async Task<SuccessWithTransaction> VerifyCodeFromEmail([FromForm] Guid code)
         {
@@ -63,6 +66,7 @@ namespace AsaGoldBff.Controllers
         /// </summary>
         /// <param name="request">User profile change request</param>
         /// <returns></returns>
+        [Authorize]
         [HttpPost("update-profile")]
         public async Task<string?> UpdateProfile([FromBody] AsaGoldRepository.KYCRequest request)
         {
@@ -73,6 +77,7 @@ namespace AsaGoldBff.Controllers
         /// Return user's profile to user
         /// </summary>
         /// <returns></returns>
+        [Authorize]
         [HttpGet("profile")]
         public Task<KYCRequest?> GetProfile()
         {
