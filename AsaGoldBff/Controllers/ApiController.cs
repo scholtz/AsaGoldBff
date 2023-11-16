@@ -86,12 +86,23 @@ namespace AsaGoldBff.Controllers
 
 
         /// <summary>
-        /// Return user's profile to user
+        /// Create RFQ for user
         /// </summary>
         /// <returns></returns>
         [Authorize]
         [HttpGet("rfq")]
         public Task<RFQ?> RFQ([FromQuery] decimal amount, [FromQuery] string currency)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// Confirm RFQ by user
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        [HttpPut("rfq/{id}")]
+        public Task<RFQ?> ConfirmRFQ([FromRoute] string id)
         {
             return null;
         }
