@@ -91,7 +91,7 @@ namespace AsaGoldBff.Controllers
         /// <returns></returns>
         [Authorize]
         [HttpGet("rfq")]
-        public Task<RFQ?> RFQ([FromQuery] decimal amount, [FromQuery] string currency)
+        public RFQResponse? RFQ([FromQuery] decimal amount, [FromQuery] string currency)
         {
             return null;
         }
@@ -102,7 +102,7 @@ namespace AsaGoldBff.Controllers
         /// <returns></returns>
         [Authorize]
         [HttpPut("rfq/{id}")]
-        public Task<RFQ?> ConfirmRFQ([FromRoute] string id)
+        public RFQResponse? ConfirmRFQ([FromRoute] string id)
         {
             return null;
         }
