@@ -12,7 +12,7 @@ namespace AsaGoldBff.Controllers
     {
         private readonly IMemoryCache cache;
         private readonly TimeSpan CacheTime = TimeSpan.FromDays(30);
-        public string[] IpfsGateways { get; set; } = new string[] { "cloudflare-ipfs.com", "gateway.ipfs.io", "ipfs.io", "dweb.link" };
+        public string[] IpfsGateways { get; set; } = new string[] { "gw3.io", "cloudflare-ipfs.com", "gateway.ipfs.io", "ipfs.io", "dweb.link" };
         public IpfsController(IMemoryCache cache)
         {
             this.cache = cache;
