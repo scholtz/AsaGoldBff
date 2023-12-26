@@ -84,6 +84,8 @@ namespace AsaGoldBff
             builder.Services.AddSingleton<EmailValidationUseCase>();
             builder.Services.AddSingleton<AccountUseCase>();
             builder.Services.AddMemoryCache();
+            builder.Services.AddResponseCaching();
+
             var corsConfig = builder.Configuration.GetSection("Cors").AsEnumerable().Select(k => k.Value).Where(k => !string.IsNullOrEmpty(k)).ToArray();
             if (corsConfig?.Any() != true) throw new Exception("Cors not setup");
             logger.Info($"Cors: {string.Join(",", corsConfig)}");
@@ -176,7 +178,8 @@ namespace AsaGoldBff
             app.UseSwagger();
             app.UseSwaggerUI();
             app.UseStatusCodePages();
-            
+            app.UseResponseCaching();
+
             app.UseExceptionHandler(exceptionHandlerApp
                 => exceptionHandlerApp.Run(async context
                     =>

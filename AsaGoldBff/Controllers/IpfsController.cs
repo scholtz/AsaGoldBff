@@ -21,6 +21,7 @@ namespace AsaGoldBff.Controllers
         /// Returns the IPFS file
         /// </summary>
         /// <returns></returns>
+        [ResponseCache(Duration = 1000000)]
         [HttpGet("{hash}")]
         public async Task<FileResult> Get(string hash)
         {
