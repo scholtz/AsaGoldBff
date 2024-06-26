@@ -74,6 +74,7 @@ namespace AsaGoldBff.Controllers
                     var response = await client.ExecuteAsync(request);
                     if (!response.IsSuccessful)
                     {
+                        logger.LogInformation($"Request not successful {response.StatusCode} {response.ContentLength}");
                         continue;
                     }
                     var contentType = response.Headers.Where(h => h?.Name?.ToLower() == "content-type");
