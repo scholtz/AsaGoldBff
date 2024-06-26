@@ -1,4 +1,5 @@
-﻿using AsaGoldBff.UseCase;
+﻿using AsaGoldBff.Model.Cache;
+using AsaGoldBff.UseCase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -34,6 +35,31 @@ namespace AsaGoldBff.Controllers
                     return new FileStreamResult(stream, typed.ContentType);
                 }
             }
+            try
+            {
+                if (!System.IO.Directory.Exists("ipfs"))
+                {
+                    System.IO.Directory.CreateDirectory("ipfs");
+                }
+                if (System.IO.File.Exists($"ipfs/{hash}.data"))
+                {
+                    if (System.IO.File.Exists($"ipfs/{hash}.content-type"))
+                    {
+                        var bytes = System.IO.File.ReadAllBytes($"ipfs/{hash}.data");
+                        var content = System.IO.File.ReadAllText($"ipfs/{hash}.content-type");
+
+                        cache.Set<Model.Cache.Ipfs>(hash, new Model.Cache.Ipfs() { ContentType = content, Data = bytes }, CacheTime);
+
+                        var stream = new MemoryStream(bytes);
+                        return new FileStreamResult(stream, content);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+            }
 
             foreach (var ipfs in IpfsGateways)
             {
@@ -48,6 +74,20 @@ namespace AsaGoldBff.Controllers
                 var contentType = response.Headers.Where(h => h?.Name?.ToLower() == "content-type");
 
                 cache.Set<Model.Cache.Ipfs>(hash, new Model.Cache.Ipfs() { ContentType = response.ContentType, Data = response.RawBytes }, CacheTime);
+
+                try
+                {
+                    if (!System.IO.Directory.Exists("ipfs"))
+                    {
+                        System.IO.Directory.CreateDirectory("ipfs");
+                    }
+                    System.IO.File.WriteAllBytes($"ipfs/{hash}.data", response.RawBytes);
+                    System.IO.File.WriteAllText($"ipfs/{hash}.content-type", response.ContentType);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex.Message);
+                }
 
                 var stream = new MemoryStream(response.RawBytes);
                 return new FileStreamResult(stream, response.ContentType);
