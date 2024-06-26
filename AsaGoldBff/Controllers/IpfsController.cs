@@ -11,11 +11,13 @@ namespace AsaGoldBff.Controllers
     [Route("ipfs")]
     public class IpfsController : ControllerBase
     {
+        private readonly ILogger<IpfsController> logger;
         private readonly IMemoryCache cache;
         private readonly TimeSpan CacheTime = TimeSpan.FromDays(30);
         public string[] IpfsGateways { get; set; } = new string[] { "gw3.io", "cloudflare-ipfs.com", "gateway.ipfs.io", "ipfs.io", "dweb.link" };
-        public IpfsController(IMemoryCache cache)
+        public IpfsController(IMemoryCache cache, ILogger<IpfsController> logger)
         {
+            this.logger = logger;
             this.cache = cache;
         }
         /// <summary>
@@ -58,39 +60,47 @@ namespace AsaGoldBff.Controllers
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine(ex.Message);
+                logger.LogError(ex.Message);
             }
 
             foreach (var ipfs in IpfsGateways)
             {
-                var client = new RestClient($"https://{ipfs}");
-                var request = new RestRequest($"/ipfs/{hash}", Method.GET);
-                request.AddHeader("User-Agent", "\r\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                var response = await client.ExecuteAsync(request);
-                if (!response.IsSuccessful)
-                {
-                    continue;
-                }
-                var contentType = response.Headers.Where(h => h?.Name?.ToLower() == "content-type");
-
-                cache.Set<Model.Cache.Ipfs>(hash, new Model.Cache.Ipfs() { ContentType = response.ContentType, Data = response.RawBytes }, CacheTime);
-
                 try
                 {
-                    if (!System.IO.Directory.Exists("ipfs"))
+                    logger.LogInformation($"Loading https://{ipfs}/ipfs/{hash}");
+                    var client = new RestClient($"https://{ipfs}");
+                    var request = new RestRequest($"/ipfs/{hash}", Method.GET);
+                    request.AddHeader("User-Agent", "\r\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    var response = await client.ExecuteAsync(request);
+                    if (!response.IsSuccessful)
                     {
-                        System.IO.Directory.CreateDirectory("ipfs");
+                        continue;
                     }
-                    System.IO.File.WriteAllBytes($"ipfs/{hash}.data", response.RawBytes);
-                    System.IO.File.WriteAllText($"ipfs/{hash}.content-type", response.ContentType);
+                    var contentType = response.Headers.Where(h => h?.Name?.ToLower() == "content-type");
+
+                    cache.Set<Model.Cache.Ipfs>(hash, new Model.Cache.Ipfs() { ContentType = response.ContentType, Data = response.RawBytes }, CacheTime);
+
+                    try
+                    {
+                        if (!System.IO.Directory.Exists("ipfs"))
+                        {
+                            System.IO.Directory.CreateDirectory("ipfs");
+                        }
+                        System.IO.File.WriteAllBytes($"ipfs/{hash}.data", response.RawBytes);
+                        System.IO.File.WriteAllText($"ipfs/{hash}.content-type", response.ContentType);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex.Message);
+                    }
+
+                    var stream = new MemoryStream(response.RawBytes);
+                    return new FileStreamResult(stream, response.ContentType);
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(ex.Message);
+                    logger.LogError(ex.Message);
                 }
-
-                var stream = new MemoryStream(response.RawBytes);
-                return new FileStreamResult(stream, response.ContentType);
 
             }
             throw new Exception("Not found");
