@@ -14,7 +14,7 @@ namespace AsaGoldBff.Controllers
         private readonly ILogger<IpfsController> logger;
         private readonly IMemoryCache cache;
         private readonly TimeSpan CacheTime = TimeSpan.FromDays(30);
-        public string[] IpfsGateways { get; set; } = new string[] { "gw3.io", "cloudflare-ipfs.com", "gateway.ipfs.io", "ipfs.io", "dweb.link" };
+        public string[] IpfsGateways { get; set; } = new string[] { "gateway.pinata.cloud", "gw3.io", "cloudflare-ipfs.com", "gateway.ipfs.io", "ipfs.io", "dweb.link" };
         public IpfsController(IMemoryCache cache, ILogger<IpfsController> logger)
         {
             this.logger = logger;
