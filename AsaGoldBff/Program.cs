@@ -1,4 +1,3 @@
-
 using AlgorandAuthentication;
 using AsaGoldBff.Controllers.Email;
 using AsaGoldBff.UseCase;
@@ -61,6 +60,7 @@ namespace AsaGoldBff
                 );
 
             builder.Services.Configure<Model.Config.BFFOptions>(builder.Configuration.GetSection("BFF"));
+            builder.Services.Configure<Model.Config.IpfsOptions>(builder.Configuration.GetSection("Ipfs"));
             builder.Services.Configure<AlgorandAuthenticationOptions>(builder.Configuration.GetSection("AlgorandAuthentication"));
             var algorandAuthenticationOptions = new AlgorandAuthenticationOptions();
             builder.Configuration.GetSection("AlgorandAuthentication").Bind(algorandAuthenticationOptions);

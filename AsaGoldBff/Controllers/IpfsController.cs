@@ -1,9 +1,12 @@
 ﻿using AsaGoldBff.Model.Cache;
+using AsaGoldBff.Model.Config;
 using AsaGoldBff.UseCase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using RestSharp;
+using RestSharp.Authenticators;
 
 namespace AsaGoldBff.Controllers
 {
@@ -13,12 +16,14 @@ namespace AsaGoldBff.Controllers
     {
         private readonly ILogger<IpfsController> logger;
         private readonly IMemoryCache cache;
+        private readonly IpfsOptions ipfsOptions;
         private readonly TimeSpan CacheTime = TimeSpan.FromDays(30);
         public string[] IpfsGateways { get; set; } = new string[] { "gateway.pinata.cloud", "gw3.io", "cloudflare-ipfs.com", "gateway.ipfs.io", "ipfs.io", "dweb.link" };
-        public IpfsController(IMemoryCache cache, ILogger<IpfsController> logger)
+        public IpfsController(IMemoryCache cache, ILogger<IpfsController> logger, IOptions<IpfsOptions> ipfsOptions)
         {
             this.logger = logger;
             this.cache = cache;
+            this.ipfsOptions = ipfsOptions.Value;
         }
         /// <summary>
         /// Returns the IPFS file
@@ -63,6 +68,48 @@ namespace AsaGoldBff.Controllers
                 logger.LogError(ex.Message);
             }
 
+            // Try private IPFS server first
+            if (!string.IsNullOrEmpty(ipfsOptions.IpfsUrl) && !string.IsNullOrEmpty(ipfsOptions.User) && !string.IsNullOrEmpty(ipfsOptions.Password))
+            {
+                try
+                {
+                    logger.LogInformation($"Loading from private IPFS {ipfsOptions.IpfsUrl}/ipfs/{hash}");
+                    var client = new RestClient(ipfsOptions.IpfsUrl);
+                    client.Timeout = 1000;
+                    client.Authenticator = new HttpBasicAuthenticator(ipfsOptions.User, ipfsOptions.Password);
+                    var request = new RestRequest($"/ipfs/{hash}", Method.GET);
+                    request.AddHeader("User-Agent", "\r\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    var response = await client.ExecuteAsync(request);
+                    if (response.IsSuccessful && response.RawBytes != null)
+                    {
+                        var contentType = response.ContentType ?? "application/octet-stream";
+
+                        cache.Set<Model.Cache.Ipfs>(hash, new Model.Cache.Ipfs() { ContentType = contentType, Data = response.RawBytes }, CacheTime);
+
+                        try
+                        {
+                            if (!System.IO.Directory.Exists("ipfs"))
+                            {
+                                System.IO.Directory.CreateDirectory("ipfs");
+                            }
+                            System.IO.File.WriteAllBytes($"ipfs/{hash}.data", response.RawBytes);
+                            System.IO.File.WriteAllText($"ipfs/{hash}.content-type", contentType);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex.Message);
+                        }
+
+                        var stream = new MemoryStream(response.RawBytes);
+                        return new FileStreamResult(stream, contentType);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError($"Error loading from private IPFS: {ex.Message}");
+                }
+            }
+
             foreach (var ipfs in IpfsGateways)
             {
                 try
@@ -93,6 +140,32 @@ namespace AsaGoldBff.Controllers
                     catch (Exception ex)
                     {
                         logger.LogError(ex.Message);
+                    }
+
+                    // Pin to private IPFS server
+                    if (!string.IsNullOrEmpty(ipfsOptions.ApiUrl) && !string.IsNullOrEmpty(ipfsOptions.User) && !string.IsNullOrEmpty(ipfsOptions.Password))
+                    {
+                        try
+                        {
+                            logger.LogInformation($"Pinning to private IPFS {ipfsOptions.ApiUrl}/api/v0/add");
+                            var pinClient = new RestClient(ipfsOptions.ApiUrl);
+                            pinClient.Authenticator = new HttpBasicAuthenticator(ipfsOptions.User, ipfsOptions.Password);
+                            var pinRequest = new RestRequest("/api/v0/add", Method.POST);
+                            pinRequest.AddFile("file", response.RawBytes, hash, response.ContentType ?? "application/octet-stream");
+                            var pinResponse = await pinClient.ExecuteAsync(pinRequest);
+                            if (pinResponse.IsSuccessful)
+                            {
+                                logger.LogInformation($"Successfully pinned {hash} to private IPFS");
+                            }
+                            else
+                            {
+                                logger.LogWarning($"Failed to pin {hash} to private IPFS: {pinResponse.StatusCode}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError($"Error pinning to private IPFS: {ex.Message}");
+                        }
                     }
 
                     var stream = new MemoryStream(response.RawBytes);
