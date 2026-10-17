@@ -54,9 +54,9 @@ namespace AsaGoldBffTests
             var result = await _controller.Get(hash);
 
             // Assert
-            Assert.IsInstanceOf<FileStreamResult>(result);
+            Assert.That(result, Is.InstanceOf<FileStreamResult>());
             var fileResult = result as FileStreamResult;
-            Assert.AreEqual("application/json", fileResult.ContentType);
+            Assert.That(fileResult!.ContentType, Is.EqualTo("application/json"));
         }
 
         [Test]

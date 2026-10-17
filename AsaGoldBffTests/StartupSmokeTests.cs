@@ -8,7 +8,7 @@ namespace AsaGoldBffTests
     /// </summary>
     public class StartupSmokeTests
     {
-        private WebApplicationFactory<AsaGoldBff.Program> factory;
+        private WebApplicationFactory<AsaGoldBff.Program> factory = null!;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()

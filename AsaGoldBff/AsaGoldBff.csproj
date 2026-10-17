@@ -20,6 +20,7 @@
     <PackageReference Include="AlgorandAuthentication" Version="2.2.0" />
     <PackageReference Include="Azure.Communication.Email" Version="1.1.0" />
     <PackageReference Include="Handlebars.Net" Version="2.4.3" />
+    <!-- Direct references pin patched versions of vulnerable transitive dependencies (NU1902/NU1903); remove when upstream packages catch up -->
     <PackageReference Include="MessagePack" Version="3.1.12" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
