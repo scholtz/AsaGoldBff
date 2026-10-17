@@ -10,8 +10,8 @@ AsaGoldBff is the backend-for-frontend (BFF) for [ASA.gold](https://www.asa.gold
 
 - `AsaGoldBff/` – the web app
   - `Program.cs` – all DI/config wiring: Swagger, ARC-14 Algorand auth, CORS (required, throws if `Cors` is empty), `Admins`, and email sender selection
-  - `Controllers/ApiController.cs` – `api/v1/*` endpoints (account, send-verification-email, verify-code-from-email); `[Authorize]` uses ARC-14 auth
-  - `Controllers/IpfsController.cs` – `GET /ipfs/{hash}`: memory cache -> local `ipfs/` disk cache -> private IPFS (`Ipfs:IpfsUrl`) -> public gateways; successful public fetches are pinned to the private node (`Ipfs:ApiUrl`)
+  - `Controllers/ApiController.cs` – `api/v1/*` endpoints (account, send-verification-email, verify-code-from-email); `[Authorize]` uses ARC-14 auth (only this controller is protected)
+  - `Controllers/IpfsController.cs` – `GET /ipfs/{hash}`: memory cache -> local `ipfs/` disk cache -> private IPFS (`Ipfs:IpfsUrl`) -> public gateways; the private node is queried only if `IpfsUrl`, `User` and `Password` are all set (a hit there is returned without pinning or trying public gateways); a public-gateway hit is pinned to the private node only if `ApiUrl`, `User` and `Password` are all set. The endpoint is anonymous (`[Authorize]` is commented out) and has no rate limit
   - `Controllers/Email/` – `IEmailSender` implementations; Program.cs picks the first configured: MailGun > Azure > SendGrid > RabbitMQ > `NoEmailSender`
   - `UseCase/` – business logic (`AccountUseCase`, `EmailValidationUseCase`), registered as singletons
   - `Model/` – DTOs: `Config` (bound options), `Settings` (email/SMS provider configs), `Email`, `SMS`, `Cache`, `Result`, `Auth`
@@ -33,7 +33,7 @@ dotnet run --project AsaGoldBff        # Swagger UI at /swagger
 docker build -f AsaGoldBff/Dockerfile .  # build context is the repo root
 ```
 
-The projects target **net7.0** (end-of-life, but the Dockerfile and CI deploy use 7.0). Building needs any SDK that can target it; running tests needs the .NET 7 runtime. If only a newer runtime is installed, `dotnet test` fails with a missing-framework error; set `DOTNET_ROLL_FORWARD=Major` to run on the newer runtime.
+The projects target **net7.0** (end-of-life; the Dockerfile also uses 7.0 images). Building needs any SDK that can target it; running tests needs the .NET 7 runtime. If only a newer runtime is installed, `dotnet test` fails with a missing-framework error; set `DOTNET_ROLL_FORWARD=Major` to run on the newer runtime.
 
 ## Configuration
 
@@ -44,7 +44,7 @@ The projects target **net7.0** (end-of-life, but the Dockerfile and CI deploy us
 - Controllers stay thin; put logic in `UseCase/` and inject via constructor.
 - New email providers: implement `IEmailSender` and add a block in the `#region Email` chain in `Program.cs`.
 - Keep `IpfsController` testable: its constructor takes `IMemoryCache`, `ILogger`, `IOptions<IpfsOptions>`. Its disk cache writes to a relative `ipfs/` directory; tests should clean it up.
-- Known issue: `IpfsController` builds file paths (`ipfs/{hash}.data`) straight from the route `hash` with no validation, so it is open to path traversal. Do not copy that pattern; validate the hash (CID characters only) before touching the filesystem.
-- Some files carry a UTF-8 BOM. `.gitattributes` only sets `* text=auto`, so git normalises line endings; keep each file's existing BOM and don't mass-convert endings.
+- Known issue: `IpfsController` builds file paths (`ipfs/{hash}.data`) straight from the route `hash` with no validation, so percent-encoded separators (e.g. `..%2F..%2Fx`) can reach the filesystem, and the same unvalidated value goes into the cache key and outbound gateway URLs. Do not copy that pattern; allow-list the hash (`^[A-Za-z0-9]+$`) before any use.
+- Some files (e.g. `IpfsController.cs`) carry a UTF-8 BOM; check with `head -c3 file | xxd` before rewriting a file. `.gitattributes` only sets `* text=auto`, so git normalises line endings; keep each file's existing BOM and don't mass-convert endings.
 - Tests must not hit the network or real providers; mock `IEmailSender`, repository clients, etc.
-- Commit directly to feature branches and open a PR; master auto-deploys.
+- Commit directly to feature branches and open a PR; master auto-deploys, and CI does not build or run tests (the workflow only SSHes and runs `deploy.sh`), so run `dotnet build` and `dotnet test` locally before merging.
