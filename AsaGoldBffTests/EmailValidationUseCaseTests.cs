@@ -56,6 +56,8 @@ namespace AsaGoldBffTests
         }
 
         [Test]
+        [Category("Integration")]
+        [Explicit("Requires AsaGoldRepository at https://localhost:44333 and Algorand testnet access")]
         public async Task SendVerificationEmail()
         {
             EmailValidationUseCase.ValidateTime = false;
@@ -65,6 +67,8 @@ namespace AsaGoldBffTests
             Assert.That(emailSender.Data.Count, Is.EqualTo(1));
         }
         [Test]
+        [Category("Integration")]
+        [Explicit("Requires AsaGoldRepository at https://localhost:44333 and Algorand testnet access")]
         public async Task VerifyEmail()
         {
             EmailValidationUseCase.ValidateTime = false;

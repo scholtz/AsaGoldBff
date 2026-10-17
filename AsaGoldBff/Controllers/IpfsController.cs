@@ -74,10 +74,12 @@ namespace AsaGoldBff.Controllers
                 try
                 {
                     logger.LogInformation($"Loading from private IPFS {ipfsOptions.IpfsUrl}/ipfs/{hash}");
-                    var client = new RestClient(ipfsOptions.IpfsUrl);
-                    client.Timeout = 1000;
-                    client.Authenticator = new HttpBasicAuthenticator(ipfsOptions.User, ipfsOptions.Password);
-                    var request = new RestRequest($"/ipfs/{hash}", Method.GET);
+                    using var client = new RestClient(new RestClientOptions(ipfsOptions.IpfsUrl)
+                    {
+                        Timeout = TimeSpan.FromMilliseconds(1000),
+                        Authenticator = new HttpBasicAuthenticator(ipfsOptions.User, ipfsOptions.Password)
+                    });
+                    var request = new RestRequest($"/ipfs/{hash}", Method.Get);
                     request.AddHeader("User-Agent", "\r\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                     var response = await client.ExecuteAsync(request);
                     if (response.IsSuccessful && response.RawBytes != null)
@@ -115,8 +117,8 @@ namespace AsaGoldBff.Controllers
                 try
                 {
                     logger.LogInformation($"Loading https://{ipfs}/ipfs/{hash}");
-                    var client = new RestClient($"https://{ipfs}");
-                    var request = new RestRequest($"/ipfs/{hash}", Method.GET);
+                    using var client = new RestClient($"https://{ipfs}");
+                    var request = new RestRequest($"/ipfs/{hash}", Method.Get);
                     request.AddHeader("User-Agent", "\r\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                     var response = await client.ExecuteAsync(request);
                     if (!response.IsSuccessful)
@@ -148,9 +150,11 @@ namespace AsaGoldBff.Controllers
                         try
                         {
                             logger.LogInformation($"Pinning to private IPFS {ipfsOptions.ApiUrl}/api/v0/add");
-                            var pinClient = new RestClient(ipfsOptions.ApiUrl);
-                            pinClient.Authenticator = new HttpBasicAuthenticator(ipfsOptions.User, ipfsOptions.Password);
-                            var pinRequest = new RestRequest("/api/v0/add", Method.POST);
+                            using var pinClient = new RestClient(new RestClientOptions(ipfsOptions.ApiUrl)
+                            {
+                                Authenticator = new HttpBasicAuthenticator(ipfsOptions.User, ipfsOptions.Password)
+                            });
+                            var pinRequest = new RestRequest("/api/v0/add", Method.Post);
                             pinRequest.AddFile("file", response.RawBytes, hash, response.ContentType ?? "application/octet-stream");
                             var pinResponse = await pinClient.ExecuteAsync(pinRequest);
                             if (pinResponse.IsSuccessful)

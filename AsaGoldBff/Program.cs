@@ -3,7 +3,7 @@ using AsaGoldBff.Controllers.Email;
 using AsaGoldBff.UseCase;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Newtonsoft.Json;
 using NLog;
 using NLog.Web;

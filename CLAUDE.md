@@ -4,7 +4,7 @@ Guidance for working in this repo.
 
 ## What this is
 
-AsaGoldBff is the backend-for-frontend (BFF) for [ASA.gold](https://www.asa.gold), a gold tokenisation project on Algorand. It is an ASP.NET Core (net7.0) Web API that sits between the frontend ([gold-asa-frontend](https://github.com/scholtz/gold-asa-frontend)) and the [AsaGoldRepository](https://github.com/scholtz/AsaGoldRepository) service. It handles user account lookup, email verification, and an IPFS caching proxy.
+AsaGoldBff is the backend-for-frontend (BFF) for [ASA.gold](https://www.asa.gold), a gold tokenisation project on Algorand. It is an ASP.NET Core (net10.0) Web API that sits between the frontend ([gold-asa-frontend](https://github.com/scholtz/gold-asa-frontend)) and the [AsaGoldRepository](https://github.com/scholtz/AsaGoldRepository) service. It handles user account lookup, email verification, and an IPFS caching proxy.
 
 ## Layout
 
@@ -33,7 +33,7 @@ dotnet run --project AsaGoldBff        # Swagger UI at /swagger
 docker build -f AsaGoldBff/Dockerfile .  # build context is the repo root
 ```
 
-The projects target **net7.0** (end-of-life; the Dockerfile also uses 7.0 images). Building needs any SDK that can target it; running tests needs the .NET 7 runtime. If only a newer runtime is installed, `dotnet test` fails with a missing-framework error; set `DOTNET_ROLL_FORWARD=Major` to run on the newer runtime.
+The projects target **net10.0** (Dockerfile uses the 10.0 SDK/aspnet images). Tests: `StartupSmokeTests` boot the app in-process (Swagger generation, auth); `EmailValidationUseCaseTests` are `[Explicit]` integration tests needing AsaGoldRepository on `https://localhost:44333` and Algorand testnet, run them with `dotnet test --filter Category=Integration`.
 
 ## Configuration
 
