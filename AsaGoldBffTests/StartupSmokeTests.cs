@@ -31,6 +31,11 @@ namespace AsaGoldBffTests
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), body);
             Assert.That(body, Does.Contain("/api/v1/account"));
             Assert.That(body, Does.Contain("/ipfs/{hash}"));
+            using var doc = System.Text.Json.JsonDocument.Parse(body);
+            var scheme = doc.RootElement.GetProperty("components").GetProperty("securitySchemes").GetProperty("oauth2");
+            Assert.That(scheme.GetProperty("name").GetString(), Is.EqualTo("Authorization"));
+            var account = doc.RootElement.GetProperty("paths").GetProperty("/api/v1/account").GetProperty("get");
+            Assert.That(account.GetProperty("security").GetRawText(), Does.Contain("oauth2"));
         }
 
         [Test]
