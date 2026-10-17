@@ -54,9 +54,37 @@ namespace AsaGoldBffTests
             var result = await _controller.Get(hash);
 
             // Assert
-            Assert.IsInstanceOf<FileStreamResult>(result);
+            Assert.That(result, Is.InstanceOf<FileStreamResult>());
             var fileResult = result as FileStreamResult;
-            Assert.AreEqual("application/json", fileResult.ContentType);
+            Assert.That(fileResult!.ContentType, Is.EqualTo("application/json"));
+        }
+
+        [Test]
+        public async Task Get_ShouldReturnFileFromDisk_AndPopulateCache()
+        {
+            var hash = "diskHash" + Guid.NewGuid().ToString("N");
+            var dir = Path.Combine(Path.GetTempPath(), "ipfs-test-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            var previous = Directory.GetCurrentDirectory();
+            try
+            {
+                Directory.SetCurrentDirectory(dir);
+                Directory.CreateDirectory("ipfs");
+                File.WriteAllBytes($"ipfs/{hash}.data", new byte[] { 4, 5, 6 });
+                File.WriteAllText($"ipfs/{hash}.content-type", "image/png");
+
+                var result = await _controller.Get(hash);
+
+                Assert.That(result, Is.InstanceOf<FileStreamResult>());
+                Assert.That(result.ContentType, Is.EqualTo("image/png"));
+                Assert.That(_cache.TryGetValue(hash, out Ipfs? cached), Is.True);
+                Assert.That(cached!.Data, Is.EqualTo(new byte[] { 4, 5, 6 }));
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(previous);
+                Directory.Delete(dir, true);
+            }
         }
 
         // Additional tests can be added for other scenarios

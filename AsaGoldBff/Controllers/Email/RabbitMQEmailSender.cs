@@ -91,9 +91,9 @@ namespace AsaGoldBff.Controllers.Email
                         Password = settings.Value.RabbitPassword,
                         VirtualHost = settings.Value.VirtualHost
                     };
-                    using var connection = factory.CreateConnection();
-                    using var channel = connection.CreateModel();
-                    channel.BasicPublish(exchange: settings.Value.Exchange,
+                    await using var connection = await factory.CreateConnectionAsync();
+                    await using var channel = await connection.CreateChannelAsync();
+                    await channel.BasicPublishAsync(exchange: settings.Value.Exchange,
                                          routingKey: settings.Value.QueueName,
                                          body: memoryStream.ToArray());
 

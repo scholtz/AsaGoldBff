@@ -81,14 +81,13 @@ namespace AsaGoldBff.Controllers.Email
 
 
 
-                var client = new RestClient
+                using var client = new RestClient(new RestClientOptions(settings.Value.Endpoint)
                 {
-                    BaseUrl = new Uri(settings.Value.Endpoint),
                     Authenticator = new HttpBasicAuthenticator("api", settings.Value.ApiKey)
-                };
+                });
 
                 var request = new RestRequest();
-                request.AddParameter("domain", settings.Value.Domain, ParameterType.UrlSegment);
+                request.AddUrlSegment("domain", settings.Value.Domain);
                 request.Resource = "{domain}/messages";
                 request.AddParameter("from", $"{settings.Value.MailerFromName} <{settings.Value.MailerFromEmail}>");
                 request.AddParameter("to", $"{toName} <{toEmail}>");
@@ -132,7 +131,7 @@ namespace AsaGoldBff.Controllers.Email
                     var emailData = data as RolesUpdatedEmail;
                     request.AddParameter("v:Name", emailData.Name);
                     request.AddParameter("v:Password", emailData.Password);
-                    request.AddParameter("v:Roles", emailData.Roles);
+                    request.AddParameter("v:Roles", string.Join(",", emailData.Roles));
                 }
                 if (data is VisitorChangeRegistrationEmail)
                 {
@@ -175,9 +174,9 @@ namespace AsaGoldBff.Controllers.Email
                 {
                     request.AddFile("attachment", Convert.FromBase64String(attachment.Content), attachment.Filename, attachment.Type);
                 }
-                request.Method = Method.POST;
+                request.Method = Method.Post;
                 logger.LogInformation($"Sending {data.TemplateId} email to {Helpers.Hash.GetSHA256Hash(settings.Value.CoHash + toEmail)}");
-                var response = client.Execute(request);
+                var response = await client.ExecuteAsync(request);
                 if (response.IsSuccessful)
                 {
                     logger.LogInformation($"Sent {data.TemplateId} email to {Helpers.Hash.GetSHA256Hash(settings.Value.CoHash + toEmail)}");
