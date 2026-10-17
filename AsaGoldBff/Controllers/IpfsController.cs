@@ -80,7 +80,7 @@ namespace AsaGoldBff.Controllers
                         Authenticator = new HttpBasicAuthenticator(ipfsOptions.User, ipfsOptions.Password)
                     });
                     var request = new RestRequest($"/ipfs/{hash}", Method.Get);
-                    request.AddHeader("User-Agent", "\r\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    request.AddHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                     var response = await client.ExecuteAsync(request);
                     if (response.IsSuccessful && response.RawBytes != null)
                     {
@@ -119,7 +119,7 @@ namespace AsaGoldBff.Controllers
                     logger.LogInformation($"Loading https://{ipfs}/ipfs/{hash}");
                     using var client = new RestClient($"https://{ipfs}");
                     var request = new RestRequest($"/ipfs/{hash}", Method.Get);
-                    request.AddHeader("User-Agent", "\r\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    request.AddHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                     var response = await client.ExecuteAsync(request);
                     if (!response.IsSuccessful)
                     {
