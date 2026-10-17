@@ -33,7 +33,7 @@ dotnet run --project AsaGoldBff        # Swagger UI at /swagger
 docker build -f AsaGoldBff/Dockerfile .  # build context is the repo root
 ```
 
-The projects target **net7.0**; a .NET 7 SDK/runtime must be installed (the dev machine may only have newer SDKs, in which case builds/tests need the 7.0 runtime available).
+The projects target **net7.0** (end-of-life, but the Dockerfile and CI deploy use 7.0). Building needs any SDK that can target it; running tests needs the .NET 7 runtime. If only a newer runtime is installed, `dotnet test` fails with a missing-framework error; set `DOTNET_ROLL_FORWARD=Major` to run on the newer runtime.
 
 ## Configuration
 
@@ -44,7 +44,7 @@ The projects target **net7.0**; a .NET 7 SDK/runtime must be installed (the dev 
 - Controllers stay thin; put logic in `UseCase/` and inject via constructor.
 - New email providers: implement `IEmailSender` and add a block in the `#region Email` chain in `Program.cs`.
 - Keep `IpfsController` testable: its constructor takes `IMemoryCache`, `ILogger`, `IOptions<IpfsOptions>`. Its disk cache writes to a relative `ipfs/` directory; tests should clean it up.
-- The IPFS `hash` route value is used to build file paths (`ipfs/{hash}.data`); treat it as untrusted input.
-- Files carry a UTF-8 BOM in places and CRLF line endings (see `.gitattributes`); preserve them to keep diffs small.
+- Known issue: `IpfsController` builds file paths (`ipfs/{hash}.data`) straight from the route `hash` with no validation, so it is open to path traversal. Do not copy that pattern; validate the hash (CID characters only) before touching the filesystem.
+- Some files carry a UTF-8 BOM. `.gitattributes` only sets `* text=auto`, so git normalises line endings; keep each file's existing BOM and don't mass-convert endings.
 - Tests must not hit the network or real providers; mock `IEmailSender`, repository clients, etc.
 - Commit directly to feature branches and open a PR; master auto-deploys.
